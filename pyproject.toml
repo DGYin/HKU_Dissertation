@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "crossmedia-pid"
+version = "0.1.0"
+description = "Cross-media person identification system"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "numpy>=1.24.0",
+    "Pillow>=10.0.0",
+    "pyyaml>=6.0",
+    "pydantic>=2.0.0",
+    "python-dotenv>=1.0.0",
+    "ultralytics>=8.0.0",
+    "opencv-python>=4.8.0",
+    "mlx>=0.15.0",
+    "mlx-vlm>=0.1.0",
+    "chromadb>=0.4.0",
+    "onnxruntime>=1.16.0",
+    "tokenizers>=0.14.0",
+    "json-repair>=0.10.0",
+    "httpx>=0.25.0",
+    "fastapi>=0.104.0",
+    "uvicorn>=0.24.0",
+    "python-multipart>=0.0.6",
+    "click>=8.1.0",
+    "rich>=13.0.0",
+    "streamlit>=1.28.0",
+    "watchdog>=3.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+]
+
+[project.scripts]
+crossmedia-pid = "crossmedia_pid.cli:cli"
+
+[tool.setuptools.packages.find]
+include = ["crossmedia_pid*"]

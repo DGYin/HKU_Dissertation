@@ -10,7 +10,7 @@ from typing import Dict, List, Optional
 
 import numpy as np
 
-from db.chroma_store import ChromaStore
+from crossmedia_pid.db.chroma_store import ChromaStore
 
 logger = logging.getLogger(__name__)
 

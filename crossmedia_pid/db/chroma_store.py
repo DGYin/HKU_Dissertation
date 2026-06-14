@@ -12,6 +12,8 @@ from typing import Dict, List, Optional
 
 import numpy as np
 
+from crossmedia_pid.config import project_path
+
 logger = logging.getLogger(__name__)
 
 
@@ -20,7 +22,7 @@ class ChromaStore:
     
     def __init__(
         self,
-        persist_directory: str = "./chroma_db",
+        persist_directory: Optional[str] = None,
         collection_name: str = "person_embeddings",
         distance_fn: str = "cosine"
     ):
@@ -32,6 +34,9 @@ class ChromaStore:
             collection_name: 集合名称
             distance_fn: 距离函数 ('cosine', 'l2', 'ip')
         """
+        if persist_directory is None:
+            persist_directory = str(project_path("data", "chroma_db"))
+
         self.persist_directory = Path(persist_directory)
         self.collection_name = collection_name
         self.distance_fn = distance_fn
@@ -247,7 +252,7 @@ def create_chroma_store(config: Optional[dict] = None) -> ChromaStore:
         return ChromaStore()
     
     return ChromaStore(
-        persist_directory=config.get('persist_directory', './chroma_db'),
+        persist_directory=config.get('persist_directory', str(project_path("data", "chroma_db"))),
         collection_name=config.get('collection_name', 'person_embeddings'),
         distance_fn=config.get('distance_fn', 'cosine')
     )

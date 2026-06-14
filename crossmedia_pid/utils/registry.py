@@ -10,6 +10,8 @@ import time
 from pathlib import Path
 from typing import Dict, Optional
 
+from crossmedia_pid.config import project_path
+
 logger = logging.getLogger(__name__)
 
 
@@ -21,13 +23,16 @@ class AttributeRegistry:
     持久化到JSON文件
     """
     
-    def __init__(self, persist_path: str = "./attribute_registry.json"):
+    def __init__(self, persist_path: Optional[str] = None):
         """
         初始化注册表
         
         Args:
             persist_path: 持久化文件路径
         """
+        if persist_path is None:
+            persist_path = str(project_path("data", "attribute_registry.json"))
+
         self.persist_path = Path(persist_path)
         self._lock = threading.Lock()
         
@@ -212,7 +217,7 @@ _registry_instance: Optional[AttributeRegistry] = None
 _registry_lock = threading.Lock()
 
 
-def get_registry(persist_path: str = "./attribute_registry.json") -> AttributeRegistry:
+def get_registry(persist_path: Optional[str] = None) -> AttributeRegistry:
     """
     获取全局注册表实例
     

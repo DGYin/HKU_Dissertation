@@ -13,6 +13,8 @@ import numpy as np
 from PIL import Image
 from ultralytics import YOLO
 
+from crossmedia_pid.config import project_path
+
 logger = logging.getLogger(__name__)
 
 
@@ -67,7 +69,7 @@ class PersonExtractor:
     
     def __init__(
         self,
-        model_path: str = "yolov8n.pt",
+        model_path: Optional[str] = None,
         conf_threshold: float = 0.5,
         iou_threshold: float = 0.45,
         min_bbox_size: int = 64,
@@ -83,6 +85,9 @@ class PersonExtractor:
             min_bbox_size: 最小边界框尺寸
             device: 推理设备 ('mps', 'cpu', None for auto)
         """
+        if model_path is None:
+            model_path = str(project_path("models", "yolov8n.pt"))
+
         self.conf_threshold = conf_threshold
         self.iou_threshold = iou_threshold
         self.min_bbox_size = min_bbox_size
@@ -343,7 +348,7 @@ def create_extractor(config: Optional[dict] = None) -> PersonExtractor:
         return PersonExtractor()
     
     return PersonExtractor(
-        model_path=config.get('model_path', 'yolov8n.pt'),
+        model_path=config.get('model_path', str(project_path("models", "yolov8n.pt"))),
         conf_threshold=config.get('conf_threshold', 0.5),
         iou_threshold=config.get('iou_threshold', 0.45),
         min_bbox_size=config.get('min_bbox_size', 64)

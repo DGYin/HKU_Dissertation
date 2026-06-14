@@ -90,88 +90,6 @@ class BaseFeatureExtractor(ABC):
         """提取特征"""
         pass
     
-    def _normalize_key(self, key: str) -> str:
-        """标准化键名"""
-        key = key.lower().strip()
-        key = re.sub(r'\s+', '_', key)
-        key = re.sub(r'[^a-z0-9_]', '', key)
-        return key
-    
-    def _clean_value(self, value: Any) -> Any:
-        """清洗值"""
-        if value is None:
-            return None
-        
-        if isinstance(value, str):
-            value = value.strip()
-            if value in ["无", "", "null", "NULL", "None", "none"]:
-                return None
-        
-        return value
-    
-    def _parse_json_response(self, response: str) -> Dict[str, Any]:
-        """解析VLM的JSON响应"""
-        response = response.strip()
-        
-        # 尝试1: 直接解析
-        try:
-            return json.loads(response)
-        except json.JSONDecodeError:
-            pass
-        
-        # 尝试2: 提取代码块
-        code_block_patterns = [
-            r'```json\s*(.*?)\s*```',
-            r'```\s*(.*?)\s*```',
-            r'\{.*\}'
-        ]
-        
-        for pattern in code_block_patterns:
-            matches = re.findall(pattern, response, re.DOTALL)
-            for match in matches:
-                try:
-                    return json.loads(match)
-                except json.JSONDecodeError:
-                    continue
-        
-        # 尝试3: 使用json_repair
-        try:
-            import json_repair
-            repaired = json_repair.repair_json(response, return_objects=True)
-            if isinstance(repaired, dict):
-                return repaired
-        except Exception as e:
-            logger.warning(f"json_repair failed: {e}")
-        
-        # 尝试4: 手动提取
-        try:
-            start = response.find('{')
-            end = response.rfind('}')
-            if start != -1 and end != -1 and end > start:
-                json_str = response[start:end+1]
-                return json.loads(json_str)
-        except json.JSONDecodeError:
-            pass
-        
-        raise ValueError(f"Failed to parse JSON from response: {response[:200]}...")
-    
-    def _filter_attributes(self, attributes: Dict[str, Any]) -> Dict[str, Any]:
-        """过滤属性"""
-        cleaned = {}
-        
-        for key, value in attributes.items():
-            norm_key = self._normalize_key(key)
-            if not norm_key:
-                continue
-            
-            cleaned_value = self._clean_value(value)
-            if cleaned_value is None:
-                continue
-            
-            cleaned[norm_key] = cleaned_value
-        
-        return cleaned
-    
     def _image_to_base64(self, image: np.ndarray) -> str:
         """将numpy数组转换为base64编码"""
         if len(image.shape) == 3 and image.shape[2] == 3:
@@ -792,7 +710,7 @@ def create_feature_extractor(config: Optional[dict] = None) -> FeatureExtractor:
     # 云服务模式 (OpenAI兼容)
     {
         "provider": "cloud",
-        "api_key": "sk-xxx",
+        "api_key": "${VLM_API_KEY}",
         "base_url": "https://api.openai.com/v1",
         "model_name": "gpt-4o",
         "max_tokens": 512,
@@ -802,7 +720,7 @@ def create_feature_extractor(config: Optional[dict] = None) -> FeatureExtractor:
     # 阿里云模式
     {
         "provider": "aliyun",
-        "api_key": "sk-xxx",
+        "api_key": "${DASHSCOPE_API_KEY}",
         "model_name": "qwen-vl-max",
         "max_tokens": 512,
         "temperature": 0.1,

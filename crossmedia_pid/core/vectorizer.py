@@ -11,7 +11,8 @@ from typing import Dict, List, Optional
 
 import numpy as np
 
-from utils.registry import AttributeRegistry, create_sparse_vector, get_registry
+from crossmedia_pid.config import project_path
+from crossmedia_pid.utils.registry import AttributeRegistry, create_sparse_vector, get_registry
 
 logger = logging.getLogger(__name__)
 
@@ -183,7 +184,7 @@ class DynamicVectorizer:
         dense_model_name: str = "BAAI/bge-small-zh-v1.5",
         dense_onnx_path: Optional[str] = None,
         max_length: int = 512,
-        registry_path: str = "./attribute_registry.json"
+        registry_path: Optional[str] = None
     ):
         """
         初始化动态向量化器
@@ -194,6 +195,9 @@ class DynamicVectorizer:
             max_length: 最大序列长度
             registry_path: 注册表路径
         """
+        if registry_path is None:
+            registry_path = str(project_path("data", "attribute_registry.json"))
+
         self.dense_vectorizer = DenseVectorizer(
             model_name=dense_model_name,
             onnx_path=dense_onnx_path,
@@ -272,5 +276,5 @@ def create_vectorizer(config: Optional[dict] = None) -> DynamicVectorizer:
         dense_model_name=config.get('model_name', 'BAAI/bge-small-zh-v1.5'),
         dense_onnx_path=config.get('onnx_path'),
         max_length=config.get('max_length', 512),
-        registry_path=config.get('registry_path', './attribute_registry.json')
+        registry_path=config.get('registry_path', str(project_path("data", "attribute_registry.json")))
     )

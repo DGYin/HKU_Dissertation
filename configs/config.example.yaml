@@ -1,0 +1,55 @@
+# CrossMedia-PID Configuration Example
+
+models:
+  yolo:
+    model_path: "models/yolov8n.pt"
+    conf_threshold: 0.5
+    iou_threshold: 0.45
+    classes: [0]
+
+  vlm:
+    provider: "aliyun"
+    api_key: "${DASHSCOPE_API_KEY}"
+    model_name: "qwen-vl-plus"
+    enable_search: false
+    enable_thinking: false
+    max_tokens: 512
+    temperature: 0.1
+    timeout: 60
+
+  embedding:
+    model_name: "BAAI/bge-small-zh-v1.5"
+    onnx_path: null
+    max_length: 512
+
+database:
+  chroma:
+    persist_directory: "data/chroma_db"
+    collection_name: "person_embeddings"
+    distance_fn: "cosine"
+
+features:
+  min_quality_score: 0.3
+  min_bbox_size: 64
+
+matching:
+  threshold: 0.72
+  top_k: 5
+  weights:
+    dense: 0.65
+    sparse: 0.35
+    face: 0.0
+
+registry:
+  persist_path: "data/attribute_registry.json"
+  min_frequency: 3
+
+m1_optimization:
+  max_queue_size: 5
+  enable_metal: true
+  memory_limit_gb: 12
+  gc_interval: 10
+
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
