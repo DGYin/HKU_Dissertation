@@ -1,0 +1,143 @@
+\chapter[Paper II: GUI-Assisted Video Testset Creation]{Paper II: GUI-Assisted Video Testset Creation for Cross-Media Person Identification}
+\label{paper:video-testset-gui}
+
+\section*{Manuscript Status}
+\addcontentsline{toc}{section}{Manuscript Status}
+
+This paper is a working draft based on the newly implemented Streamlit GUI and dataset export module. The experimental section is currently scaffolded; final results will be added after larger video samples are annotated.
+
+\section{Abstract}
+
+Evaluation is a bottleneck for early-stage cross-media person identification systems because labelled same-person and different-person pairs are costly to create. This paper presents a GUI-assisted workflow for constructing test datasets from video. The system uploads a video, detects and tracks person trajectories, allows the researcher to select candidate identities, samples frames from selected tracks, exports cropped person images, and generates a manifest plus positive and negative pair files. The workflow is implemented in the \systemname\ Streamlit interface and produces Overleaf- and script-friendly dataset artifacts. By turning exploratory video analysis into structured testset creation, the interface supports iterative evaluation, manual inspection, and future benchmark expansion.
+
+\section{Motivation}
+
+The first prototype of \systemname\ could process individual images and compare selected frames, but evaluation still required manual file handling. For a dissertation project with limited time, this creates friction: every new video requires repeated manual extraction, naming, and pair construction. A GUI-supported dataset workflow reduces this overhead and encourages more systematic experiments.
+
+This paper treats the GUI as part of the research method rather than as a presentation layer only. The interface determines how data is selected, how crops are produced, what metadata is saved, and how easily failure cases can be revisited. A poorly designed interface can quietly bias evaluation by encouraging cherry-picked samples or by losing track of source-frame context. The current design therefore emphasizes explicit track selection, visible quality metadata, and exportable manifests.
+
+\section{Design Requirements}
+
+The GUI was designed around five requirements:
+
+\begin{enumerate}
+  \item \textbf{Low friction.} A researcher should be able to upload a video and create a dataset without writing one-off extraction scripts.
+  \item \textbf{Human-in-the-loop labelling.} The interface should keep the researcher responsible for selecting tracks instead of assuming perfect automatic identity tracking.
+  \item \textbf{Traceability.} Every exported crop should retain its source video, frame number, track ID, and bounding-box coordinates.
+  \item \textbf{Script compatibility.} The output should be usable by Python evaluation scripts without requiring the GUI.
+  \item \textbf{Overleaf compatibility.} Crops and summaries should be easy to inspect and include in dissertation figures or appendices.
+\end{enumerate}
+
+\section{Workflow Design}
+
+The GUI workflow has five stages:
+
+\begin{enumerate}
+  \item Upload a video file in a common format such as MP4, AVI, MOV, or MKV.
+  \item Sample frames and detect person bounding boxes using the visual extractor.
+  \item Associate detections into lightweight tracks using bounding-box overlap.
+  \item Display track previews, frame counts, position distributions, and quality scores.
+  \item Export selected tracks as a labelled crop dataset.
+\end{enumerate}
+
+The interface intentionally keeps manual selection in the loop. Fully automatic identity labelling would be unreliable at the current stage, especially when multiple people overlap or when tracking fragments occur. Manual track selection lets the researcher choose identities that are suitable for controlled testing while still automating the repetitive export steps.
+
+The GUI also provides a quick same-person test for a selected track. It extracts two crops from different positions when possible, processes them through \systemname, and displays the identity decision, match score, quality score, and extracted attributes. This immediate feedback helps the researcher decide whether a video is useful for building a larger testset.
+
+\section{Dataset Format}
+
+The exported dataset contains a simple directory structure:
+
+\begin{lstlisting}
+dataset_name/
+  images/
+    p0000_track000_f000015_left_00.jpg
+    p0000_track000_f000120_right_01.jpg
+  manifest.csv
+  manifest.jsonl
+  pairs.csv
+  summary.json
+\end{lstlisting}
+
+\texttt{manifest.csv} records one row per crop, including the relative image path, assigned person ID, source track ID, frame number, position label, detection confidence, track statistics, bounding box coordinates, and source video path. \texttt{pairs.csv} contains positive pairs from crops of the same selected track and negative pairs from crops of different selected tracks. \texttt{summary.json} records dataset-level metadata such as identity count, image count, and pair counts.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Key fields in the generated manifest.}
+  \label{tab:manifest-fields}
+  \begin{tabularx}{\textwidth}{lX}
+    \toprule
+    Field & Meaning \\
+    \midrule
+    \texttt{image\_path} & Relative path to the exported crop. \\
+    \texttt{person\_id} & Dataset-local identity label assigned from selected track order. \\
+    \texttt{track\_id} & Original GUI track identifier. \\
+    \texttt{frame\_number} & Video frame from which the crop was extracted. \\
+    \texttt{position} & Coarse horizontal position: left, center, right, or unknown. \\
+    \texttt{confidence} & Detector confidence for the sampled frame. \\
+    \texttt{bbox\_*} & Padded crop coordinates in the source frame. \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\section{Implementation}
+
+The export logic is implemented separately from the Streamlit page in \texttt{crossmedia\_pid/dataset.py}. This separation prevents the GUI from becoming the only way to generate datasets and makes the export function testable. A lightweight unit test creates a synthetic video, exports crops from two mock tracks, and checks that images, manifests, pairs, and ZIP archives are generated correctly.
+
+The export function samples each selected track at approximately evenly spaced indices. This avoids taking all crops from adjacent frames, which would make same-person pairs too easy and uninformative. For each sampled frame, the function expands the bounding box by a configurable padding factor and saves a JPEG crop. Positive pairs are generated from combinations of crops within the same selected track. Negative pairs are generated across selected tracks. The current negative-pair strategy is intentionally simple and will be refined once larger videos are available.
+
+\section{Quality Control}
+
+The exported manifest enables several quality checks before running expensive VLM evaluation:
+
+\begin{itemize}
+  \item remove tracks with fewer than a minimum number of sampled frames;
+  \item inspect crops with low detector confidence;
+  \item compare failures by horizontal position to detect viewpoint sensitivity;
+  \item trace any crop back to its source frame and bounding box;
+  \item verify that positive pairs are not merely near-duplicate adjacent frames.
+\end{itemize}
+
+These checks are important because dataset errors would directly distort the evaluation of the matching algorithm. For example, a fragmented track may create false positive labels if it merges two individuals, while an identity split may create false negative pairs if the same person is selected as two different tracks.
+
+\section{Preliminary Evaluation Plan}
+
+The exported datasets will support three levels of evaluation:
+
+\begin{itemize}
+  \item \textbf{Pair-level matching.} Each positive or negative pair can be processed by \systemname\ to compute similarity scores and binary decisions.
+  \item \textbf{Threshold sensitivity.} The same pairs can be evaluated under different match thresholds to estimate precision--recall trade-offs.
+  \item \textbf{Failure analysis.} Manifest metadata allows failure cases to be grouped by position, track quality, frame number, and crop confidence.
+\end{itemize}
+
+The final dissertation experiments should include at least three categories of videos: single-person controlled movement, multi-person non-overlapping scenes, and multi-person scenes with visual similarity or occlusion. The current text reports the planned structure; final dataset statistics and measured results should be inserted after annotation is complete.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Planned dataset categories for GUI-generated evaluation.}
+  \label{tab:paper2-dataset-plan}
+  \begin{tabularx}{\textwidth}{lX}
+    \toprule
+    Category & Purpose \\
+    \midrule
+    Single-person controlled videos & Verify same-person consistency across pose and position changes. \\
+    Multi-person separated videos & Generate simple positive and negative pairs with low tracking ambiguity. \\
+    Multi-person similar-clothing videos & Stress-test false positives and attribute ambiguity. \\
+    Occlusion or low-resolution clips & Analyse failure cases under difficult visual evidence. \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\section{Discussion}
+
+The dataset creation interface is not merely an engineering convenience. It changes the research workflow by making evaluation iterative. When a matching error occurs, the researcher can inspect the source crop, track position, VLM attributes, and pair label. This is especially important for a VLM-based system because errors may arise from detection quality, crop context, prompt instability, or database thresholding.
+
+The workflow also supports dissertation writing. Exported crops can be used as qualitative examples, \texttt{summary.json} provides dataset statistics, and \texttt{pairs.csv} can be used to regenerate evaluation tables. This makes the GUI a bridge between software development and thesis evidence.
+
+\section{Limitations}
+
+The current workflow does not solve identity tracking in complex scenes. It uses a lightweight IoU-based association strategy, so it can fail under long occlusions, camera cuts, or crossing pedestrians. It also assumes that the researcher can manually identify usable tracks. These limitations are acceptable for the present dissertation stage because the goal is controlled dataset construction, not fully automatic multi-camera tracking.
+
+\section{Conclusion}
+
+This paper presented a GUI-assisted video-to-testset workflow for \systemname. The workflow converts videos into structured crop datasets with manifests and labelled pairs, creating a foundation for the dissertation's final evaluation. The current implementation is ready for pilot data creation and will be extended with larger annotated experiments.

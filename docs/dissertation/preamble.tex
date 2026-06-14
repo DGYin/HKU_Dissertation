@@ -1,0 +1,39 @@
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage{setspace}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usepackage{listings}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage[hidelinks]{hyperref}
+\usepackage[nameinlink,noabbrev]{cleveref}
+
+\usetikzlibrary{arrows.meta,positioning,fit,shapes.geometric}
+\graphicspath{{figures/}{../screenshots/webgui/}}
+\onehalfspacing
+
+\setlist[itemize]{leftmargin=1.4em}
+\setlist[enumerate]{leftmargin=1.6em}
+
+\definecolor{codegray}{RGB}{245,245,245}
+\lstset{
+  basicstyle=\ttfamily\small,
+  backgroundcolor=\color{codegray},
+  frame=single,
+  breaklines=true,
+  columns=fullflexible
+}
+
+\newcommand{\systemname}{CrossMedia-PID}
+\newcommand{\moduleA}{Visual Extractor}
+\newcommand{\moduleB}{VLM Feature Extractor}
+\newcommand{\moduleC}{Hybrid Vectorizer}
+\newcommand{\moduleD}{Identity Matcher}

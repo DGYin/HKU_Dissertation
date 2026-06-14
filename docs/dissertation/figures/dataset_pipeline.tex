@@ -1,0 +1,21 @@
+\begin{tikzpicture}[
+  node distance=0.8cm and 1cm,
+  box/.style={draw, rounded corners, align=center, minimum width=2.8cm, minimum height=0.9cm, fill=orange!7},
+  file/.style={draw, align=center, minimum width=2.6cm, minimum height=0.8cm, fill=gray!8},
+  arrow/.style={-{Latex[length=2.2mm]}, thick}
+]
+\node[box] (video) {Uploaded\\Video};
+\node[box, right=of video] (tracks) {YOLO-based\\Track Extraction};
+\node[box, right=of tracks] (select) {Manual Track\\Selection};
+\node[box, below=of select] (sample) {Frame Sampling\\and Crop Export};
+\node[file, left=of sample] (manifest) {manifest.csv\\manifest.jsonl};
+\node[file, below=of sample] (pairs) {pairs.csv\\positive/negative};
+\node[file, right=of sample] (zip) {Dataset ZIP\\for Overleaf / tests};
+
+\draw[arrow] (video) -- (tracks);
+\draw[arrow] (tracks) -- (select);
+\draw[arrow] (select) -- (sample);
+\draw[arrow] (sample) -- (manifest);
+\draw[arrow] (sample) -- (pairs);
+\draw[arrow] (sample) -- (zip);
+\end{tikzpicture}

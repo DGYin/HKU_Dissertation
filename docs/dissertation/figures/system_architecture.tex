@@ -1,0 +1,22 @@
+\begin{tikzpicture}[
+  node distance=0.9cm and 1.3cm,
+  box/.style={draw, rounded corners, align=center, minimum width=3.2cm, minimum height=1cm, fill=blue!6},
+  store/.style={draw, cylinder, shape border rotate=90, aspect=0.25, align=center, minimum height=1.2cm, minimum width=1.6cm, fill=green!8},
+  arrow/.style={-{Latex[length=2.2mm]}, thick}
+]
+\node[box] (input) {Image / Video\\Frame};
+\node[box, right=of input] (detector) {Module A\\Visual Extractor};
+\node[box, right=of detector] (vlm) {Module B\\VLM Attribute Extractor};
+\node[box, below=of vlm] (vectorizer) {Module C\\Dense + Sparse Vectorizer};
+\node[box, left=of vectorizer] (matcher) {Module D\\Identity Matcher};
+\node[store, below=of matcher] (db) {ChromaDB\\Vector Store};
+\node[box, left=of matcher] (output) {Identity Decision\\and Ranked Matches};
+
+\draw[arrow] (input) -- (detector);
+\draw[arrow] (detector) -- (vlm);
+\draw[arrow] (vlm) -- (vectorizer);
+\draw[arrow] (vectorizer) -- (matcher);
+\draw[arrow] (matcher) -- (output);
+\draw[arrow] (vectorizer) |- (db);
+\draw[arrow] (db) -- (matcher);
+\end{tikzpicture}

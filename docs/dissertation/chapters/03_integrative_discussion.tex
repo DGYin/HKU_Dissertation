@@ -1,0 +1,22 @@
+\chapter{Integrative Discussion}
+\label{ch:integrative-discussion}
+
+\section{What the Papers Share}
+
+The three manuscripts are connected by a single theme: cross-media person identification should be both vector-searchable and inspectable. Paper I introduces the hybrid representation, Paper II creates the evaluation workflow needed to study it, and Paper III frames the dynamic attribute registry as the mechanism that can make open-ended VLM descriptions usable at scale.
+
+\section{Strengths of the Current Prototype}
+
+The current prototype has several strengths. It is modular, which makes it possible to replace the VLM provider, embedding model, vector database, or matching weights without rewriting the entire system. It is also operational: the CLI and GUI can process images and videos, and the GUI can now export reusable datasets. Finally, the system produces human-readable attributes, which helps diagnose why a match succeeded or failed.
+
+\section{Current Limitations}
+
+The limitations are equally important. The evaluation dataset remains small, and the reported performance should be treated as preliminary. The VLM may produce unstable descriptions across frames, especially when crops are blurry, occluded, or low resolution. The current sparse vector records attribute keys rather than value-level facts, which limits its discriminative power. The tracking algorithm in the GUI is lightweight and can fragment identities in complex scenes. Finally, API-based VLM calls introduce latency, cost, and reproducibility concerns.
+
+\section{Implications for Final Evaluation}
+
+The final dissertation should avoid overclaiming. The strongest defensible claim is not that \systemname\ outperforms mature Re-ID models, but that it provides an interpretable and extensible framework for VLM-assisted cross-media person matching. The final evaluation should therefore include both quantitative matching metrics and qualitative interpretability analysis. Failure cases should be treated as evidence, not merely as errors to hide.
+
+\section{Ethical and Practical Considerations}
+
+Person identification technologies raise privacy and misuse concerns. This dissertation should explicitly frame \systemname\ as a research prototype and avoid presenting it as a deployment-ready surveillance system. Any dataset collection should respect consent, data minimization, and local institutional guidelines. The dissertation should also discuss bias risks: VLMs may describe demographic traits inconsistently, and clothing-based matching can be unreliable or socially sensitive. The most responsible use of this work is as a controlled research artifact for studying representation and evaluation, not as an automated decision system.

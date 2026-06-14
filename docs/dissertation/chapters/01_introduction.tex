@@ -1,0 +1,47 @@
+\chapter{Introduction}
+\label{ch:introduction}
+
+\section{Research Motivation}
+
+Person identification is a recurring requirement in security, surveillance, multimedia search, and human-centred video analytics. A practical investigator may need to answer questions such as whether a person appearing in one video segment is the same person shown in another camera view, whether a still photograph corresponds to a person in a surveillance clip, or whether a natural-language description such as ``a young man wearing a black T-shirt with a white logo'' can retrieve candidate appearances from a video archive. These use cases go beyond conventional closed-set classification because the system must compare visual evidence across different media, resolutions, viewpoints, and temporal contexts.
+
+Traditional person re-identification (Re-ID) research has made substantial progress by learning discriminative visual embeddings for matching images of pedestrians across cameras \citep{zheng2016person,ye2021deep}. However, many Re-ID systems remain difficult to inspect: they return similarity scores but provide limited explanation of which visible traits supported the match. At the same time, modern vision--language models (VLMs) have become capable of producing rich open-domain descriptions of people, clothing, and accessories \citep{radford2021learning,bai2023qwenvl}. This dissertation explores whether VLM-derived attributes can provide a useful bridge between interpretable human descriptions and vector-based retrieval.
+
+\systemname\ is developed as a prototype for this problem. Instead of treating a person crop only as a visual embedding, the system first detects the person, extracts structured visual attributes using a VLM, converts the attributes into both dense semantic vectors and sparse attribute indicators, and then performs identity matching using a weighted hybrid similarity function. The system is designed as an experimental research artifact: it includes a command-line interface, a Streamlit graphical interface, a persistent vector database, and a test dataset creation workflow for extracting person crops from videos.
+
+\section{Problem Statement}
+
+This dissertation studies the following research problem:
+
+\begin{quote}
+How can a modular vision--language pipeline represent and match person identities across images and video frames while preserving enough attribute-level structure for inspection, dataset construction, and future text-based retrieval?
+\end{quote}
+
+The problem contains three technical tensions. First, visual appearance is high-dimensional and viewpoint-sensitive, so purely symbolic attributes may be too brittle. Second, learned dense embeddings can be effective but often opaque. Third, real-world evaluation requires repeatable datasets and labelled matching pairs, yet early-stage prototypes often lack a convenient mechanism for constructing such datasets from video. The current work responds to these tensions through a hybrid dense--sparse representation and a GUI-supported dataset creation pipeline.
+
+\section{Research Objectives}
+
+The project has five objectives:
+
+\begin{enumerate}
+  \item Develop a modular person identification pipeline that processes images and video frames using separate detection, feature extraction, vectorization, and matching modules.
+  \item Use a vision--language model to extract structured, interpretable person attributes such as clothing colour, clothing type, accessories, hair style, and distinctive patterns.
+  \item Combine dense semantic embeddings with sparse attribute vectors to support both flexible retrieval and inspectable matching evidence.
+  \item Implement a persistent vector storage and retrieval layer for incremental identity matching.
+  \item Build a GUI-assisted testing workflow that can track persons in video, select trajectories, export reusable test datasets, and run same-person matching checks.
+\end{enumerate}
+
+\section{Current Contributions}
+
+At the current stage, the dissertation makes the following contributions.
+
+\begin{itemize}
+  \item \textbf{A modular prototype architecture.} \systemname\ separates visual extraction, VLM feature extraction, vectorization, matching, configuration, and interface layers. This makes the system easier to test and extend.
+  \item \textbf{A hybrid attribute representation.} The system converts VLM attributes into dense text embeddings and sparse registry-based vectors, then combines cosine similarity and sparse overlap in a configurable matcher.
+  \item \textbf{A video-to-testset GUI workflow.} The Streamlit interface supports video upload, person trajectory extraction, manual track selection, crop export, manifest generation, positive/negative pair generation, and ZIP download.
+  \item \textbf{A reproducible software artifact.} The repository now contains an Overleaf-ready dissertation draft, a Python package structure, configuration templates without embedded secrets, and lightweight automated tests for dataset export.
+\end{itemize}
+
+\section{Dissertation Organization}
+
+This dissertation is organized as a paper-based thesis. \Cref{ch:integrative-methodology} provides the unifying system methodology. \Cref{paper:hybrid-vlm-pid} is the first manuscript and focuses on the core hybrid representation and identity matching architecture. \Cref{paper:video-testset-gui} is the second manuscript and focuses on video-driven test dataset creation and GUI-supported evaluation. \Cref{paper:attribute-registry-protocol} is a third manuscript-in-preparation that formalizes the dynamic attribute registry and outlines the next-stage evaluation protocol. The final chapters synthesize the results, limitations, and future research directions.

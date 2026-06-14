@@ -1,0 +1,11 @@
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+
+Person identification across images, videos, and textual descriptions remains difficult when only partial, low-resolution, or viewpoint-dependent evidence is available. Conventional person re-identification systems typically learn visual embeddings from camera-to-camera image pairs, while practical investigative workflows often require a more flexible form of matching: an operator may start from a still image, a short surveillance clip, or a natural-language description of clothing and appearance. This dissertation develops \systemname, a modular cross-media person identification system that uses vision--language models to extract structured person attributes and combines them with dense semantic embeddings for identity matching.
+
+The dissertation is written as a multi-paper thesis. Paper I introduces the core \systemname\ architecture: a YOLO-based visual extractor, a VLM-based attribute extractor, a hybrid dense--sparse vectorizer, and an identity matcher backed by a persistent vector database. Paper II presents a video-centric testing and dataset creation interface that converts tracked person trajectories into reusable crop datasets with manifests and positive/negative matching pairs. Paper III, currently framed as a manuscript-in-preparation, formalizes the dynamic attribute registry and outlines an evaluation protocol for extending \systemname\ toward text-to-person retrieval and larger-scale cross-media benchmarks.
+
+The current prototype demonstrates the feasibility of combining open-domain visual attributes with vector retrieval. Preliminary experiments show stable same-person matching in controlled image-pair and video-frame scenarios, while also exposing limitations related to VLM variability, small-scale evaluation, and dependence on attribute visibility. The dissertation argues that attribute-grounded hybrid representations are a promising bridge between black-box visual embeddings and interpretable cross-media search, especially when systems must support human inspection, dataset construction, and incremental experimentation.
+
+\vspace{1em}
+\noindent\textbf{Keywords:} person identification; person re-identification; vision--language models; attribute extraction; vector database; video analytics; cross-media retrieval.

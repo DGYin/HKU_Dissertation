@@ -1,0 +1,36 @@
+\chapter{Literature Review}
+\label{ch:literature-review}
+
+\section{Person Re-Identification}
+
+Person re-identification (Re-ID) studies the problem of retrieving images of the same pedestrian identity across cameras, viewpoints, and times. Early benchmarks such as CUHK03 and Market-1501 established the image-based retrieval setting and evaluation metrics that remain influential in later work \citep{li2014deepreid,zheng2015scalable}. Deep Re-ID systems generally learn an embedding space in which same-identity samples are close and different-identity samples are distant. Modern surveys describe the evolution from hand-crafted descriptors to convolutional, part-based, transformer-based, and unsupervised approaches \citep{zheng2016person,ye2021deep}.
+
+Although Re-ID methods are highly relevant to this dissertation, the \systemname\ objective is slightly different. Standard Re-ID usually assumes that query and gallery are both person images and that the main goal is ranking images. In contrast, this project is interested in cross-media workflows in which the query may be a video frame, a still image, or a textual description. It also prioritizes inspectable attributes because the user may want to understand why two appearances were matched.
+
+\section{Video-Based Person Identification}
+
+Video-based Re-ID extends image Re-ID by using temporal evidence from tracklets. Datasets such as MARS and methods using recurrent or temporal pooling architectures show that temporal information can help when single frames are noisy \citep{zheng2016mars,mcLaughlin2016recurrent}. However, video also introduces practical difficulties: tracks may fragment, bounding boxes may drift, and a person may be visible only at low resolution or under occlusion. The current \systemname\ GUI therefore treats video as a source for controlled dataset construction rather than assuming that fully automatic tracking is already solved.
+
+\section{Attribute-Based Person Description}
+
+Person attributes provide a semantic layer between low-level visual features and human language. Datasets and methods for pedestrian attribute recognition, such as PETA and attribute-driven Re-ID, show that clothing, accessories, and body-related cues can support retrieval and explanation \citep{deng2014pedestrian,su2016deep}. Attribute methods are attractive for dissertation work because they make matching evidence more interpretable: if a match succeeds because both crops are described as wearing black upper clothing and white shoes, that evidence can be inspected by a researcher.
+
+The limitation is that attributes are not always stable. A backpack may be occluded in one view, a logo may be too small to read, and colour descriptions may vary under lighting changes. This motivates a hybrid representation rather than an attribute-only method.
+
+\section{Text-Based Person Search}
+
+Text-based person search investigates retrieval of pedestrian images from natural-language descriptions. The CUHK-PEDES task introduced by \citet{li2017personsearch} is especially relevant because it directly connects language descriptions with person images. Later work has explored cross-modal alignment, transformer encoders, and vision-language pretraining for this task. Text-based person search informs the future direction of \systemname: if VLM-extracted attributes and user-written descriptions can be mapped into a shared representation, the same database could support image-to-image, video-to-image, and text-to-person retrieval.
+
+\section{Vision--Language Models}
+
+Vision--language models learn or prompt joint representations of images and language. CLIP demonstrated that large-scale image--text contrastive pretraining can produce transferable visual representations \citep{radford2021learning}. Qwen-VL and later Qwen2.5-VL models extend this direction toward richer visual understanding and instruction-following behaviour \citep{bai2023qwenvl,bai2025qwenvl}. For \systemname, the key property of VLMs is not only their embedding ability but also their capacity to produce structured natural-language or JSON-like descriptions of a person crop.
+
+Recent Re-ID work has also begun to exploit vision--language models. CLIP-ReID adapts CLIP-style pretraining to image re-identification, suggesting that language-supervised visual representations can improve Re-ID transfer \citep{li2023clipreid}. This dissertation differs by using VLMs as an explicit attribute extraction module rather than only as a pretrained visual backbone.
+
+\section{Vector Retrieval and Hybrid Representations}
+
+Vector databases make it convenient to store embeddings and query nearest neighbours as a system grows. ChromaDB is used in this project as a lightweight persistent embedding store \citep{chroma2024}. However, dense vector retrieval alone can be opaque. Sparse representations, by contrast, can expose which attribute dimensions overlap, but they may be brittle when attributes are missing or phrased differently. The hybrid design in \systemname\ therefore follows a pragmatic principle: use dense vectors for semantic flexibility and sparse vectors for attribute-level structure.
+
+\section{Research Gap}
+
+The reviewed literature suggests three gaps that this dissertation addresses. First, many Re-ID systems are optimized for benchmark ranking but not for iterative cross-media investigation. Second, text-based person search connects language and images but often assumes curated text descriptions rather than VLM-extracted attributes from arbitrary crops. Third, early-stage prototypes frequently lack a reproducible pathway from raw video to labelled evaluation pairs. \systemname\ addresses these gaps through a modular VLM-assisted matching system and a GUI-supported testset creation workflow.

@@ -1,0 +1,92 @@
+\chapter[Paper III: Dynamic Attribute Registry and Evaluation Protocol]{Paper III: Dynamic Attribute Registry and Evaluation Protocol for Attribute-Grounded Person Retrieval}
+\label{paper:attribute-registry-protocol}
+
+\section*{Manuscript Status}
+\addcontentsline{toc}{section}{Manuscript Status}
+
+This chapter is a manuscript-in-preparation. It currently defines the conceptual direction for the third paper and will be expanded after the final dataset and ablation experiments are complete.
+
+\section{Abstract}
+
+Vision--language models can produce flexible descriptions, but open-ended attributes create a representation challenge: the system must support new attribute keys without constantly redesigning its vector schema. This paper proposes a dynamic attribute registry for attribute-grounded person retrieval. The registry maps observed attribute keys to persistent sparse dimensions and tracks usage statistics over time. The paper further proposes an evaluation protocol for measuring the contribution of dense semantic similarity, sparse attribute overlap, and future text-query alignment. The protocol will guide the final stage of \systemname\ evaluation.
+
+\section{Motivation}
+
+A closed attribute schema is easy to evaluate but restrictive. A fully open text description is flexible but difficult to index and compare. \systemname\ currently takes a middle path: it asks the VLM for a target set of attributes, but the sparse representation can grow when new keys appear. This supports experimentation with new prompts and attribute categories without invalidating previously stored dense vectors.
+
+The problem is especially visible in person retrieval because some cues are stable categories, such as \texttt{topwear\_color}, while others are open-ended, such as the description of a printed logo. A rigid schema may miss useful details, but a completely unconstrained set of generated phrases may make sparse matching meaningless. The dynamic registry is therefore a compromise between controlled vocabulary and open-world description.
+
+\section{Dynamic Attribute Registry}
+
+The registry stores a mapping from normalized attribute keys to integer identifiers. Each key also records observation count and timestamps. In the current implementation, the sparse vector records key presence rather than value-specific dimensions. This design is intentionally simple; it avoids uncontrolled explosion from every possible colour or phrase, while still measuring whether two descriptions contain overlapping categories of evidence.
+
+The registry currently supports three operations. First, \textbf{registration} assigns a new identifier when an unseen normalized key appears. Second, \textbf{lookup} retrieves the identifier for a known key. Third, \textbf{statistics} reports the number of observed and frequently observed attributes. These operations are sufficient for the prototype, but the dissertation evaluation will use the registry statistics to identify which attributes are common, rare, stable, or noisy.
+
+Future versions should consider three extensions:
+
+\begin{enumerate}
+  \item \textbf{Value-aware dimensions:} represent pairs such as \texttt{topwear\_color=black} instead of only \texttt{topwear\_color}.
+  \item \textbf{Reliability weights:} down-weight attributes that are frequently unstable across frames.
+  \item \textbf{Category priors:} assign higher weights to more discriminative categories such as logos, bags, or unusual clothing patterns.
+\end{enumerate}
+
+\section{Proposed Weighting Strategy}
+
+A natural extension is to replace equal sparse weights with reliability-aware weights. Let $a$ be an attribute key and let $r(a)$ denote its empirical repeatability across crops of the same identity. Let $u(a)$ denote its uniqueness across identities. A future sparse weight could be defined as:
+
+\begin{equation}
+w(a) = \lambda r(a) + (1-\lambda)u(a),
+\end{equation}
+
+\noindent where $\lambda$ controls the trade-off between stability and discriminativeness. For example, a very common attribute such as \texttt{topwear\_type} may be stable but not unique, while a logo description may be unique but less reliably extracted. The final dissertation may not fully implement this weighting scheme, but it provides a principled direction for future work.
+
+\section{Evaluation Protocol}
+
+The final evaluation should report:
+
+\begin{itemize}
+  \item accuracy, precision, recall, F1, and ROC/AUC for pair-level matching;
+  \item separate dense-only, sparse-only, and hybrid matching ablations;
+  \item threshold sensitivity curves for the final identity decision;
+  \item stability of VLM attributes across frames of the same track;
+  \item qualitative failure cases grouped by occlusion, low resolution, similar clothing, and attribute hallucination.
+\end{itemize}
+
+The protocol should be applied first to GUI-generated crop datasets and then, if time permits, to public Re-ID or text-based person search datasets. Public datasets such as Market-1501 and CUHK-PEDES are useful because they allow comparison to established tasks, but the dissertation's own generated datasets remain important because they reflect the actual workflow supported by the software artifact.
+
+\section{Text-to-Person Extension}
+
+The registry also prepares the system for text-to-person retrieval. A user description can be parsed into attributes, vectorized using the same dense and sparse pathways, and searched against the existing database. This would transform \systemname\ from an image/video matching prototype into a cross-media retrieval tool. The main research question is whether VLM-derived attributes and human-written descriptions are aligned enough to share a representation space.
+
+Text-to-person retrieval can be implemented in two stages. In the first stage, a deterministic parser or language model converts a text query into the same attribute keys used by VLM extraction. In the second stage, the query attributes are vectorized and searched against stored person records. This design is inspired by natural-language person search research \citep{li2017personsearch}, but it differs because the database entries are generated by VLM descriptions rather than human captions.
+
+\section{Planned Experiments}
+
+\begin{table}[htbp]
+  \centering
+  \caption{Planned ablation experiments for Paper III.}
+  \label{tab:paper3-planned-experiments}
+  \begin{tabularx}{\textwidth}{lX}
+    \toprule
+    Experiment & Purpose \\
+    \midrule
+    Dense-only retrieval & Measure baseline semantic embedding performance. \\
+    Sparse-only retrieval & Measure effect of explicit attribute overlap. \\
+    Hybrid retrieval & Test whether dense and sparse evidence are complementary. \\
+    Prompt variants & Measure sensitivity to VLM extraction prompt wording. \\
+    Text queries & Evaluate whether natural descriptions retrieve correct video crops. \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\section{Expected Outcomes}
+
+The expected outcome is a clearer understanding of when attribute-grounded retrieval helps. Dense-only retrieval is expected to be more tolerant of paraphrase and minor wording differences. Sparse-only retrieval is expected to be more interpretable but less robust when attributes are missing. Hybrid retrieval should perform best when dense semantics and explicit attribute overlap agree. Text-query retrieval is expected to be more difficult than image-pair matching because user descriptions may omit details that the VLM includes or include details that the VLM fails to detect.
+
+\section{Risks}
+
+The main risk is that the registry grows in ways that are not semantically meaningful. If the VLM produces inconsistent keys, the sparse space becomes noisy. This risk is partly addressed by key normalization and prompt control, but future work may require synonym mapping or ontology-based grouping. Another risk is that value-aware dimensions will create too many sparse features. The dissertation should therefore evaluate the simplest registry first before adding complexity.
+
+\section{Conclusion}
+
+This manuscript will turn the current engineering mechanism of a dynamic registry into a formal research contribution. Its role in the dissertation is to connect the implemented prototype to a broader question: how should open-ended VLM attributes be stabilized, indexed, and evaluated for person retrieval?

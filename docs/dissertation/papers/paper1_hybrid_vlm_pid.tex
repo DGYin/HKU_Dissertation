@@ -1,0 +1,136 @@
+\chapter[Paper I: Hybrid VLM-Based Person Identification]{Paper I: Hybrid Vision--Language Attribute Representation for Cross-Media Person Identification}
+\label{paper:hybrid-vlm-pid}
+
+\section*{Manuscript Status}
+\addcontentsline{toc}{section}{Manuscript Status}
+
+This paper is a first full dissertation manuscript draft. It is based on the implemented \systemname\ prototype and will later be revised into a standalone conference-style paper after the evaluation dataset is expanded.
+
+\section{Abstract}
+
+Cross-media person identification requires matching individuals across still images, video frames, and potentially natural-language descriptions. Existing person re-identification systems often rely on dense visual embeddings that can be effective but difficult to inspect. This paper presents \systemname, a modular prototype that uses a vision--language model to extract structured person attributes and combines dense semantic embeddings with sparse attribute vectors for identity matching. The system uses YOLO-based person detection, VLM-based attribute extraction, a dynamic attribute registry, ChromaDB vector retrieval, and a threshold-based hybrid matcher. Preliminary controlled experiments indicate stable same-person matching across image pairs and video-frame crops, suggesting that attribute-grounded hybrid representations can support interpretable cross-media retrieval. The paper discusses the method, implementation, early findings, and limitations that motivate larger-scale evaluation.
+
+\section{Introduction}
+
+Person Re-ID has traditionally been formulated as an image retrieval problem: given a query person image, retrieve images of the same identity from a gallery \citep{zheng2016person,ye2021deep}. In practical settings, however, the query may not always be an image from the same distribution as the gallery. A user may begin with a short clip, a partial crop, or a description of clothing. This motivates representations that can be connected to both visual similarity and language-level attributes.
+
+Vision--language models provide an opportunity to convert person crops into structured descriptions. Instead of relying solely on a black-box visual embedding, \systemname\ asks a VLM to produce a JSON-style set of attributes. These attributes are then used in two ways: as text for dense semantic embedding, and as symbolic keys for sparse vector matching. The central hypothesis is that dense and sparse evidence are complementary. Dense embeddings tolerate paraphrase and semantic similarity; sparse vectors preserve explicit overlap in detected traits.
+
+This paper focuses on the first part of the dissertation: whether such a hybrid representation can be implemented as a coherent person identification pipeline. The paper does not claim that the current prototype exceeds state-of-the-art Re-ID systems. Instead, it positions \systemname\ as an interpretable research framework that can later be evaluated against stronger baselines such as strong CNN baselines, transformer-based Re-ID models, and CLIP-based Re-ID methods \citep{luo2019bag,he2021transreid,li2023clipreid}.
+
+\section{Related Work}
+
+\subsection{Image-Based Re-ID}
+
+Image-based Re-ID benchmarks such as CUHK03 and Market-1501 provide the conventional setting for matching pedestrian images across cameras \citep{li2014deepreid,zheng2015scalable}. Strong Re-ID baselines combine classification and metric learning objectives, data augmentation, re-ranking, and carefully tuned training recipes \citep{luo2019bag}. Transformer approaches such as TransReID further improve representation learning by modelling global context and part-level cues \citep{he2021transreid}. These methods provide important baselines for future comparison, but their learned embeddings are not always easy to interpret.
+
+\subsection{Attribute and Language Supervision}
+
+Attribute-based methods use semantic cues to assist person retrieval. Deep attribute-driven Re-ID shows that attributes can provide complementary supervision for identity matching \citep{su2016deep}. Text-based person search, especially the CUHK-PEDES benchmark, further demonstrates the value of connecting person images with natural-language descriptions \citep{li2017personsearch}. \systemname\ borrows this semantic motivation but obtains descriptions automatically from VLMs instead of relying on human-written captions.
+
+\subsection{Vision--Language Models for Re-ID}
+
+Large-scale image--text pretraining has made visual representations more transferable \citep{radford2021learning}. CLIP-ReID adapts CLIP to person Re-ID by exploiting vision--language pretraining for image re-identification \citep{li2023clipreid}. The approach in this paper is complementary: rather than using a VLM only as a representation backbone, it uses the VLM to produce structured attributes that can be displayed, stored, and combined with sparse evidence.
+
+\section{Method}
+
+\subsection{Person Crop Extraction}
+
+Given an image or sampled video frame, the visual extractor detects person bounding boxes and filters them by confidence and size. A crop quality score is computed from four factors: detection confidence, relative area, local sharpness, and centrality. For single-image processing, only the best crop is passed to the VLM. For video processing, crops may also be associated into trajectories.
+
+Let $b=(x_1,y_1,x_2,y_2)$ denote a detected bounding box and $I_b$ its crop. The prototype quality score is not intended to be a learned perceptual measure; it is a pragmatic heuristic for selecting a crop that is large enough, sufficiently sharp, and likely to contain the main person. This simple heuristic is useful because the VLM stage is comparatively expensive, so passing every detection to the VLM would slow down exploratory testing.
+
+\subsection{Structured Attribute Extraction}
+
+The VLM prompt requests a fixed but open-ended set of appearance attributes. The target schema includes demographic cues, clothing colour and type, pattern type and description, accessories, hair, posture, and distinctive traits. The parser standardizes snake-case keys and removes unavailable values. Because VLM responses may not always be valid JSON, the implementation attempts direct parsing, code-block extraction, JSON repair, and brace-delimited fallback extraction.
+
+The prompt design reflects a surveillance-style visual description task. In particular, it asks the model to describe pattern location, size, and colour when visible. This detail is important because two people may share the same broad clothing category but differ in a logo or printed pattern. The extracted attributes are stored together with the raw model response so that later failure analysis can distinguish between VLM extraction errors and matching errors.
+
+\subsection{Dense Semantic Representation}
+
+Attributes are linearized into a compact textual description such as \texttt{topwear\_color is black, shoes\_type is sneakers}. This text is encoded using a sentence embedding model. The dense vector is designed to capture semantic similarity even when attribute values are not identical strings.
+
+\subsection{Sparse Attribute Representation}
+
+Each observed attribute key is registered in a persistent attribute registry. The sparse representation is a dictionary from registry IDs to weights. The current prototype uses equal weights, but the design allows later weighting by reliability, attribute category, or empirical discriminativeness. The registry grows as new attributes appear, which avoids requiring a closed schema at the beginning of development.
+
+\subsection{Hybrid Matching}
+
+Candidate records are retrieved from ChromaDB using dense vector similarity. For each candidate, sparse similarity is computed using a weighted Jaccard-style overlap. The final score is a weighted sum of dense and sparse scores. A configurable threshold determines whether the query is assigned to an existing identity or creates a new identity.
+
+The matching procedure can be summarized as follows. Given a query crop, extract attributes $A_q$, generate dense vector $d_q$ and sparse vector $s_q$, retrieve top-$k$ candidates by $d_q$, compute sparse overlap with each candidate, and choose the candidate with the highest hybrid score. If no candidate exceeds the threshold, the query is stored as a new identity. This design supports incremental database construction, which is useful for exploratory video analysis where identities are added over time.
+
+\section{Implementation}
+
+The implementation is organized as a Python package. The main application service is responsible for wiring together the extractor, VLM client, vectorizer, matcher, and storage layer. A CLI provides image processing and search commands, while the Streamlit GUI supports video-oriented workflows. Configuration is stored in YAML and API keys are read from environment variables.
+
+The implementation also separates research scripts from production-like package code. Experimental scripts are kept under \texttt{experiments/}, while reusable logic such as configuration loading, application orchestration, and dataset export is in \texttt{crossmedia\_pid/}. This separation matters for dissertation reproducibility because it allows the text to describe a stable artifact rather than a collection of one-off scripts.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Core modules in the current implementation.}
+  \label{tab:paper1-modules}
+  \begin{tabularx}{\textwidth}{lX}
+    \toprule
+    Module & Role \\
+    \midrule
+    \texttt{PersonExtractor} & Detects and crops person regions from images or frames. \\
+    \texttt{FeatureExtractor} & Calls a VLM provider and parses structured attributes. \\
+    \texttt{DynamicVectorizer} & Generates dense text embeddings and sparse registry vectors. \\
+    \texttt{IdentityMatcher} & Computes hybrid scores and assigns identity decisions. \\
+    \texttt{ChromaStore} & Persists vectors and metadata for retrieval. \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\section{Preliminary Results}
+
+Early tests used paired person images and video frame crops. In controlled same-person comparisons, the system produced high match scores and consistent identity decisions across repeated runs. The performance monitor showed that VLM feature extraction dominates runtime, while detection, vector search, and matching are comparatively fast. These results are promising but should be treated as preliminary because the dataset remains small and controlled.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Preliminary performance profile from the prototype stage. Values are indicative and will be replaced by final experiments.}
+  \label{tab:paper1-performance}
+  \begin{tabular}{lrr}
+    \toprule
+    Stage & Approx. Time & Notes \\
+    \midrule
+    Image loading & $<0.01$s & Local file read. \\
+    Person detection & $\sim0.3$s & YOLO inference on sample images. \\
+    VLM attribute extraction & $3$--$10$s & Depends on API latency and model. \\
+    Vectorization & $\sim2$s & Includes embedding model call. \\
+    Database matching & $<0.01$s & Small ChromaDB collection. \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Planned Ablations}
+
+The final version of this paper will include four ablation settings:
+
+\begin{enumerate}
+  \item \textbf{Dense only:} use only semantic embedding similarity.
+  \item \textbf{Sparse only:} use only attribute-registry overlap.
+  \item \textbf{Hybrid fixed weights:} use the current manually configured dense/sparse weights.
+  \item \textbf{Hybrid tuned weights:} select weights and threshold on a validation split.
+\end{enumerate}
+
+These ablations will test whether sparse attribute evidence contributes beyond dense semantic embeddings. The expected result is not that sparse vectors always outperform dense vectors, but that they improve interpretability and help in cases where explicit traits such as bags, hats, or logos are visible.
+
+\section{Discussion}
+
+The hybrid representation offers two practical advantages. First, it creates an interpretable audit trail: the system can display extracted attributes alongside match scores. Second, it provides a path to text-based search, because natural-language descriptions and VLM-derived attributes can be mapped into the same representation space. The main weakness is that VLM attributes can vary with crop quality, viewpoint, and prompt design. A person whose logo or accessory is occluded may receive a substantially different sparse representation across frames.
+
+Another challenge is that attributes are not equally discriminative. ``Black top'' may be common in a dataset, whereas ``red backpack'' may be more useful. A future learned weighting scheme could estimate attribute reliability and discriminativeness from the generated datasets. Until such data is available, the current implementation keeps the sparse representation deliberately simple.
+
+\section{Limitations and Next Steps}
+
+The current evaluation is not yet sufficient for final claims about accuracy. The next stage must construct a larger labelled dataset, compare against visual embedding baselines, conduct threshold sensitivity analysis, and measure false positives under visually similar clothing. Face embeddings are reserved as a future optional component, but the core dissertation contribution remains the attribute-grounded hybrid representation.
+
+\section{Threats to Validity}
+
+There are four main threats to validity. First, small pilot datasets may overestimate performance because they do not contain enough visually similar distractors. Second, VLM APIs may change over time, which can affect reproducibility. Third, the same-person labels generated from manual track selection are only as reliable as the underlying track quality. Fourth, the current sparse vector design uses attribute keys rather than full key--value facts, which may understate the discriminative value of attributes. These threats motivate the dataset creation workflow in Paper II and the registry protocol in Paper III.
+
+\section{Conclusion}
+
+This paper introduced \systemname\ as a modular method for cross-media person identification. The prototype demonstrates that VLM-derived attributes can be converted into a hybrid representation suitable for interpretable matching. The method is not a replacement for mature Re-ID models; rather, it is a research framework for combining semantic attributes, vector retrieval, and human-readable evidence in cross-media workflows.

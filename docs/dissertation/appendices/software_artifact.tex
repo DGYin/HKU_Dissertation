@@ -1,0 +1,20 @@
+\chapter{Software Artifact}
+\label{app:software}
+
+\section{Repository Layout}
+
+The software artifact is organized as a Python project. The main package is \texttt{crossmedia\_pid}. GUI entry points are kept in \texttt{apps/}; experiments are kept in \texttt{experiments/}; generated datasets are ignored by version control.
+
+\section{Common Commands}
+
+\begin{lstlisting}[language=bash]
+conda activate crossmedia
+python -m crossmedia_pid.cli process path/to/image.jpg
+python -m crossmedia_pid.cli stats
+streamlit run apps/video_test_webgui.py
+python -m pytest tests/test_dataset_export.py
+\end{lstlisting}
+
+\section{Verification Completed}
+
+At this draft stage, the Python files parse successfully, the CLI help command runs in the configured Conda environment, and the dataset export unit test passes. Full end-to-end VLM evaluation requires a valid API key and selected test videos.

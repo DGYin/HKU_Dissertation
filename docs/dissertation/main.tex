@@ -1,0 +1,48 @@
+\documentclass[12pt,oneside]{book}
+
+\input{preamble}
+
+\newcommand{\dissertationtitle}{CrossMedia-PID: Vision--Language Attribute Representation for Cross-Media Person Identification}
+\newcommand{\studentname}{[Your Name]}
+\newcommand{\studentid}{[Your Student ID]}
+\newcommand{\supervisor}{[Supervisor Name]}
+\newcommand{\department}{[Department Name]}
+\newcommand{\institution}{The University of Hong Kong}
+\newcommand{\submissiondate}{\today}
+
+\begin{document}
+
+\frontmatter
+\input{frontmatter/titlepage}
+\input{frontmatter/abstract}
+\input{frontmatter/acknowledgements}
+
+\tableofcontents
+\listoffigures
+\listoftables
+
+\mainmatter
+
+\part{Integrative Dissertation Chapters}
+\input{chapters/01_introduction}
+\input{chapters/02_literature_review}
+\input{chapters/02_integrative_methodology}
+
+\part{Paper-Based Manuscripts}
+\input{papers/paper1_hybrid_vlm_pid}
+\input{papers/paper2_video_testset_gui}
+\input{papers/paper3_attribute_registry_protocol}
+
+\part{Synthesis}
+\input{chapters/03_integrative_discussion}
+\input{chapters/04_conclusion}
+
+\appendix
+\input{appendices/software_artifact}
+\input{appendices/configuration}
+
+\backmatter
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

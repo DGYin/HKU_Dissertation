@@ -1,0 +1,26 @@
+\chapter{Conclusion and Future Work}
+\label{ch:conclusion}
+
+\section{Summary}
+
+This dissertation develops \systemname, a modular prototype for cross-media person identification. The system uses visual detection to obtain person crops, VLM prompting to extract structured attributes, dense and sparse vectorization to represent those attributes, and a hybrid matcher to assign identity decisions. Recent engineering work reorganized the codebase into a maintainable package structure and added a GUI-based video testset creation workflow.
+
+\section{Contributions}
+
+The current dissertation draft contributes:
+
+\begin{enumerate}
+  \item a working VLM-assisted person identification pipeline;
+  \item a hybrid dense--sparse representation for attribute-grounded matching;
+  \item a dynamic registry for open-ended attribute dimensions;
+  \item a GUI workflow for converting videos into labelled crop datasets;
+  \item an Overleaf-compatible paper-based dissertation structure for continuing the writing process.
+\end{enumerate}
+
+\section{Future Work}
+
+The immediate next step is to generate and annotate larger test datasets using the new GUI. After that, the dissertation should add final experiments, including dense-only and sparse-only ablations, threshold tuning, text-query retrieval, and failure-case analysis. A future system version may integrate face embeddings, stronger tracking, caching, and local VLM inference to reduce latency and improve reproducibility.
+
+\section{Closing Remarks}
+
+The project began as an implementation-heavy prototype and is now ready to become a dissertation argument. The central argument is that VLM-derived attributes can make person matching more interpretable and more adaptable to cross-media workflows, provided that the system is evaluated carefully and its limitations are made explicit.
